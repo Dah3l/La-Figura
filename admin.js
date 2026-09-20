@@ -277,7 +277,10 @@ window.moveService = async function(id, newIndex) {
         const currentService = activeServices.find(s => s.id === id);
         const targetService = activeServices[newIndex];
         
-        if (!currentService || !targetService) return;
+        if (!currentService || !targetService) {
+            console.error('Servicio no encontrado:', { currentService, targetService });
+            return;
+        }
         
         // Si ya está en esa posición, no hacer nada
         if (currentService.id === targetService.id) return;
@@ -300,22 +303,22 @@ window.moveService = async function(id, newIndex) {
             { 
                 id: currentService.id, 
                 position: targetPos,
-                name: currentService.name,
-                price: currentService.price,
-                duration: currentService.duration,
-                description: currentService.description,
-                image_url: currentService.image_url,
-                is_active: currentService.is_active
+                name: currentService.name || '',
+                price: currentService.price || 0,
+                duration: currentService.duration || 30,
+                description: currentService.description || null,
+                image_url: currentService.image_url || null,
+                is_active: currentService.is_active !== undefined ? currentService.is_active : true
             },
             { 
                 id: targetService.id, 
                 position: currentPos,
-                name: targetService.name,
-                price: targetService.price,
-                duration: targetService.duration,
-                description: targetService.description,
-                image_url: targetService.image_url,
-                is_active: targetService.is_active
+                name: targetService.name || '',
+                price: targetService.price || 0,
+                duration: targetService.duration || 30,
+                description: targetService.description || null,
+                image_url: targetService.image_url || null,
+                is_active: targetService.is_active !== undefined ? targetService.is_active : true
             }
         ];
         
@@ -360,16 +363,21 @@ window.moveServiceToStart = async function(id) {
         // Obtener el servicio completo para mantener todos sus campos
         const serviceToUpdate = activeServices.find(s => s.id === id);
         
+        if (!serviceToUpdate) {
+            console.error('Servicio no encontrado:', id);
+            return;
+        }
+        
         const { error: updateError } = await db.from('services')
             .upsert([{
                 id: serviceToUpdate.id,
                 position: newPosition,
-                name: serviceToUpdate.name,
-                price: serviceToUpdate.price,
-                duration: serviceToUpdate.duration,
-                description: serviceToUpdate.description,
-                image_url: serviceToUpdate.image_url,
-                is_active: serviceToUpdate.is_active
+                name: serviceToUpdate.name || '',
+                price: serviceToUpdate.price || 0,
+                duration: serviceToUpdate.duration || 30,
+                description: serviceToUpdate.description || null,
+                image_url: serviceToUpdate.image_url || null,
+                is_active: serviceToUpdate.is_active !== undefined ? serviceToUpdate.is_active : true
             }]);
         
         if (updateError) throw updateError;
@@ -410,16 +418,21 @@ window.moveServiceToEnd = async function(id) {
         // Obtener el servicio completo para mantener todos sus campos
         const serviceToUpdate = activeServices.find(s => s.id === id);
         
+        if (!serviceToUpdate) {
+            console.error('Servicio no encontrado:', id);
+            return;
+        }
+        
         const { error: updateError } = await db.from('services')
             .upsert([{
                 id: serviceToUpdate.id,
                 position: newPosition,
-                name: serviceToUpdate.name,
-                price: serviceToUpdate.price,
-                duration: serviceToUpdate.duration,
-                description: serviceToUpdate.description,
-                image_url: serviceToUpdate.image_url,
-                is_active: serviceToUpdate.is_active
+                name: serviceToUpdate.name || '',
+                price: serviceToUpdate.price || 0,
+                duration: serviceToUpdate.duration || 30,
+                description: serviceToUpdate.description || null,
+                image_url: serviceToUpdate.image_url || null,
+                is_active: serviceToUpdate.is_active !== undefined ? serviceToUpdate.is_active : true
             }]);
         
         if (updateError) throw updateError;
