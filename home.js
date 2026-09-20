@@ -17,6 +17,7 @@ async function loadFeaturedServices() {
         if (data && data.length > 0) {
             container.innerHTML = data.map(service => `
                 <div class="service-card">
+                    ${service.image_url ? `<img src="${escapeHtml(service.image_url)}" alt="${escapeHtml(service.name)}" class="service-image" loading="lazy" onerror="this.style.display='none'">` : ''}
                     <h3>${escapeHtml(service.name)}</h3>
                     <p class="service-price">${service.price} CUP</p>
                     <p class="service-duration">⏱️ ${service.duration} min</p>

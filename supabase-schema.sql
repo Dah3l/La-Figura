@@ -1,6 +1,7 @@
 -- ============================================
 -- SCRIPT SQL PARA SUPABASE
 -- Barbería Cuba - Esquema de Base de Datos
+-- ACTUALIZADO: Se asegura columna duration en services
 -- ============================================
 
 -- Habilitar UUID extension
@@ -32,25 +33,48 @@ CREATE TABLE IF NOT EXISTS services (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(255) NOT NULL,
     price INTEGER NOT NULL,
-    duration INTEGER NOT NULL, -- en minutos
+    duration INTEGER NOT NULL DEFAULT 30, -- en minutos, valor por defecto agregado
     description TEXT,
+    image_url TEXT, -- URL de imagen para el servicio
     active BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Insertar servicios iniciales de ejemplo
-INSERT INTO services (name, price, duration, description) VALUES
-('Corte Clásico', 500, 30, 'Corte de cabello tradicional con tijera y máquina'),
-('Corte Moderno', 600, 40, 'Corte de cabello con diseño y estilizado'),
-('Barba Completa', 400, 25, 'Perfilado y recorte de barba con toalla caliente'),
-('Corte + Barba', 800, 50, 'Servicio combinado de corte y arreglo de barba'),
-('Afeitado Tradicional', 350, 30, 'Afeitado completo con navaja y productos premium'),
-('Diseño Especial', 200, 15, 'Diseños y figuras personalizadas'),
-('Corte Niño', 400, 30, 'Corte especializado para niños'),
-('Manicure', 300, 20, 'Limpieza y cuidado de uñas'),
-('Tratamiento Capilar', 500, 30, 'Hidratación y nutrición del cabello'),
-('Servicio VIP', 1500, 90, 'Experiencia completa: corte, barba, manicure y tratamiento')
+-- Verificar y agregar columna duration si no existe
+DO $$ 
+BEGIN 
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'services' AND column_name = 'duration'
+    ) THEN
+        ALTER TABLE services ADD COLUMN duration INTEGER NOT NULL DEFAULT 30;
+    END IF;
+END $$;
+
+-- Verificar y agregar columna image_url si no existe
+DO $$ 
+BEGIN 
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'services' AND column_name = 'image_url'
+    ) THEN
+        ALTER TABLE services ADD COLUMN image_url TEXT;
+    END IF;
+END $$;
+
+-- Insertar servicios iniciales de ejemplo con imágenes de Unsplash
+INSERT INTO services (name, price, duration, description, image_url) VALUES
+('Corte Clásico', 500, 30, 'Corte de cabello tradicional con tijera y máquina', 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=400&h=300&fit=crop'),
+('Corte Moderno', 600, 40, 'Corte de cabello con diseño y estilizado', 'https://images.unsplash.com/photo-1622286342621-4bd786c2447c?w=400&h=300&fit=crop'),
+('Barba Completa', 400, 25, 'Perfilado y recorte de barba con toalla caliente', 'https://images.unsplash.com/photo-1605497788044-5a32c7078486?w=400&h=300&fit=crop'),
+('Corte + Barba', 800, 50, 'Servicio combinado de corte y arreglo de barba', 'https://images.unsplash.com/photo-1503951914875-befbb649186f?w=400&h=300&fit=crop'),
+('Afeitado Tradicional', 350, 30, 'Afeitado completo con navaja y productos premium', 'https://images.unsplash.com/photo-1599351431202-1e0f0137899a?w=400&h=300&fit=crop'),
+('Diseño Especial', 200, 15, 'Diseños y figuras personalizadas', 'https://images.unsplash.com/photo-1621605815971-fbc98d665033?w=400&h=300&fit=crop'),
+('Corte Niño', 400, 30, 'Corte especializado para niños', 'https://images.unsplash.com/photo-1517832606299-7ae9b720a186?w=400&h=300&fit=crop'),
+('Manicure', 300, 20, 'Limpieza y cuidado de uñas', 'https://images.unsplash.com/photo-1519014816548-bf5fe059e98b?w=400&h=300&fit=crop'),
+('Tratamiento Capilar', 500, 30, 'Hidratación y nutrición del cabello', 'https://images.unsplash.com/photo-1522337660859-02fbefca4702?w=400&h=300&fit=crop'),
+('Servicio VIP', 1500, 90, 'Experiencia completa: corte, barba, manicure y tratamiento', 'https://images.unsplash.com/photo-1593702295094-aea8c5c13589?w=400&h=300&fit=crop')
 ON CONFLICT DO NOTHING;
 
 -- ============================================
