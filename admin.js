@@ -130,12 +130,10 @@ async function loadServices() {
     const container = document.getElementById('admin-services-list');
     
     try {
-        // Obtener todos los servicios y filtrar solo activos en JS para evitar errores de columna
         const { data: allData, error } = await db.from('services').select('*');
         
         if (error) throw error;
         
-        // Filtrar solo activos y ordenar por position
         const data = (allData || [])
             .filter(s => s.is_active !== false)
             .sort((a, b) => {
@@ -145,7 +143,7 @@ async function loadServices() {
             });
         
         if (data && data.length > 0) {
-            container.innerHTML = data.map((service, index) => `
+            container.innerHTML = data.map(service => `
                 <div class="service-item" data-id="${service.id}">
                     <div class="service-info">
                         <strong>${escapeHtml(service.name)}</strong>
@@ -153,10 +151,6 @@ async function loadServices() {
                         ${service.description ? `<small>${escapeHtml(service.description)}</small>` : ''}
                     </div>
                     <div class="service-actions">
-                        <button class="btn btn-sm btn-outline" onclick="moveServiceToStart(${service.id})" title="Mover al inicio">⏮️</button>
-                        <button class="btn btn-sm btn-outline" onclick="moveService(${service.id}, ${index - 1})" ${index === 0 ? 'disabled' : ''} title="Mover arriba">⬆️</button>
-                        <button class="btn btn-sm btn-outline" onclick="moveService(${service.id}, ${index + 1})" ${index === data.length - 1 ? 'disabled' : ''} title="Mover abajo">⬇️</button>
-                        <button class="btn btn-sm btn-outline" onclick="moveServiceToEnd(${service.id})" title="Mover al final">⏭️</button>
                         <button class="btn btn-sm btn-outline" onclick="editService(${service.id})">Editar</button>
                         <button class="btn btn-sm btn-danger" onclick="deleteService(${service.id})">Eliminar</button>
                     </div>
@@ -257,135 +251,6 @@ window.deleteService = async function(id) {
     } catch (error) {
         console.error('Error eliminando servicio:', error);
         alert('❌ Error al eliminar: ' + error.message);
-    }
-};
-
-// Mover servicio arriba/abajo (función global) - Optimizado: solo actualiza position
-window.moveService = async function(id, newIndex) {
-    try {
-        // Obtener todos los servicios activos
-        const { data: allServices, error: fetchError } = await db.from('services').select('*');
-        if (fetchError) throw fetchError;
-        
-        const activeServices = allServices.filter(s => s.is_active !== false);
-        
-        // Verificar límites
-        if (newIndex < 0 || newIndex >= activeServices.length) return;
-        
-        // Obtener servicio actual y el de destino
-        const currentService = activeServices.find(s => s.id === id);
-        const targetService = activeServices[newIndex];
-        
-        if (!currentService || !targetService) return;
-        if (currentService.id === targetService.id) return;
-        
-        // Calcular posiciones
-        const getPosition = (service) => {
-            if (service.position !== null && service.position !== undefined) {
-                return service.position;
-            }
-            const idx = activeServices.findIndex(s => s.id === service.id);
-            return idx * 1000 + service.price;
-        };
-        
-        const currentPos = getPosition(currentService);
-        const targetPos = getPosition(targetService);
-        
-        // Actualizar SOLO el campo position de ambos servicios
-        const { error: updateError } = await db.from('services')
-            .update({ position: targetPos })
-            .eq('id', currentService.id);
-        
-        if (updateError) throw updateError;
-        
-        const { error: updateError2 } = await db.from('services')
-            .update({ position: currentPos })
-            .eq('id', targetService.id);
-        
-        if (updateError2) throw updateError2;
-        
-        loadServices();
-    } catch (error) {
-        console.error('Error moviendo servicio:', error);
-        alert('⚠️ Error al mover: ' + error.message);
-    }
-};
-
-// Mover servicio al inicio (función global) - Optimizado: solo actualiza position
-window.moveServiceToStart = async function(id) {
-    try {
-        // Obtener todos los servicios activos
-        const { data: allServices, error: fetchError } = await db.from('services').select('*');
-        if (fetchError) throw fetchError;
-        
-        const activeServices = allServices.filter(s => s.is_active !== false);
-        if (activeServices.length <= 1) return;
-        
-        // Si ya está al inicio, no hacer nada
-        if (activeServices[0].id === id) return;
-        
-        // Encontrar la posición mínima actual de los que tienen position
-        const positionsWithValues = activeServices
-            .filter(s => s.position !== null && s.position !== undefined)
-            .map(s => s.position);
-        
-        let newPosition;
-        if (positionsWithValues.length > 0) {
-            newPosition = Math.min(...positionsWithValues) - 1;
-        } else {
-            newPosition = 0;
-        }
-        
-        // Actualizar SOLO el campo position
-        const { error: updateError } = await db.from('services')
-            .update({ position: newPosition })
-            .eq('id', id);
-        
-        if (updateError) throw updateError;
-        
-        loadServices();
-    } catch (error) {
-        console.error('Error moviendo servicio al inicio:', error);
-        alert('⚠️ Error al mover: ' + error.message);
-    }
-};
-
-// Mover servicio al final (función global)
-window.moveServiceToEnd = async function(id) {
-    try {
-        // Obtener todos los servicios activos
-        const { data: allServices, error: fetchError } = await db.from('services').select('*');
-        if (fetchError) throw fetchError;
-        
-        const activeServices = allServices.filter(s => s.is_active !== false);
-        if (activeServices.length <= 1) return;
-        
-        // Si ya está al final, no hacer nada
-        if (activeServices[activeServices.length - 1].id === id) return;
-        
-        // Encontrar la posición máxima actual de los que tienen position
-        const positionsWithValues = activeServices
-            .filter(s => s.position !== null && s.position !== undefined)
-            .map(s => s.position);
-        
-        let newPosition;
-        if (positionsWithValues.length > 0) {
-            newPosition = Math.max(...positionsWithValues) + 1;
-        } else {
-            newPosition = activeServices.length;
-        }
-
-        // Actualizar SOLO el campo position
-        const { error: updateError } = await db.from('services')
-            .update({ position: newPosition })
-            .eq('id', id);
-
-        if (updateError) throw updateError;
-
-        loadServices();
-    } catch (error) {
-        console.error('Error moviendo servicio al final:', error);
-        alert('⚠️ Error al mover: ' + error.message);
     }
 };
 

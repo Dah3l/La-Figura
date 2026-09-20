@@ -36,7 +36,6 @@ CREATE TABLE IF NOT EXISTS services (
     duration INTEGER NOT NULL DEFAULT 30, -- en minutos, valor por defecto agregado
     description TEXT,
     image_url TEXT, -- URL de imagen para el servicio
-    position INTEGER, -- Para ordenamiento personalizado
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -61,17 +60,6 @@ BEGIN
         WHERE table_name = 'services' AND column_name = 'image_url'
     ) THEN
         ALTER TABLE services ADD COLUMN image_url TEXT;
-    END IF;
-END $$;
-
--- Verificar y agregar columna position si no existe (para ordenamiento)
-DO $$ 
-BEGIN 
-    IF NOT EXISTS (
-        SELECT 1 FROM information_schema.columns 
-        WHERE table_name = 'services' AND column_name = 'position'
-    ) THEN
-        ALTER TABLE services ADD COLUMN position INTEGER;
     END IF;
 END $$;
 
@@ -130,7 +118,6 @@ CREATE TABLE IF NOT EXISTS appointments (
 -- ÍNDICES PARA MEJORAR RENDIMIENTO
 -- ============================================
 CREATE INDEX IF NOT EXISTS idx_services_is_active ON services(is_active) WHERE is_active = true;
-CREATE INDEX IF NOT EXISTS idx_services_position ON services(position) WHERE position IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_services_price ON services(price ASC);
 CREATE INDEX IF NOT EXISTS idx_appointments_date ON appointments(date);
 CREATE INDEX IF NOT EXISTS idx_appointments_status ON appointments(status);
