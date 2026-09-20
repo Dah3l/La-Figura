@@ -260,14 +260,13 @@ window.deleteService = async function(id) {
     }
 };
 
-// Mover servicio arriba/abajo (función global)
+// Mover servicio arriba/abajo (función global) - Optimizado: solo actualiza position
 window.moveService = async function(id, newIndex) {
     try {
-        // Obtener todos los servicios
+        // Obtener todos los servicios activos
         const { data: allServices, error: fetchError } = await db.from('services').select('*');
         if (fetchError) throw fetchError;
         
-        // Filtrar solo los activos para el ordenamiento visual
         const activeServices = allServices.filter(s => s.is_active !== false);
         
         // Verificar límites
@@ -277,20 +276,14 @@ window.moveService = async function(id, newIndex) {
         const currentService = activeServices.find(s => s.id === id);
         const targetService = activeServices[newIndex];
         
-        if (!currentService || !targetService) {
-            console.error('Servicio no encontrado:', { currentService, targetService });
-            return;
-        }
-        
-        // Si ya está en esa posición, no hacer nada
+        if (!currentService || !targetService) return;
         if (currentService.id === targetService.id) return;
         
-        // Calcular posiciones basadas en position o usar price como fallback
+        // Calcular posiciones
         const getPosition = (service) => {
             if (service.position !== null && service.position !== undefined) {
                 return service.position;
             }
-            // Si no tiene position, usar un valor basado en su índice actual
             const idx = activeServices.findIndex(s => s.id === service.id);
             return idx * 1000 + service.price;
         };
@@ -298,34 +291,18 @@ window.moveService = async function(id, newIndex) {
         const currentPos = getPosition(currentService);
         const targetPos = getPosition(targetService);
         
-        // Actualizar ambos servicios manteniendo todos sus campos
-        const updates = [
-            { 
-                id: currentService.id, 
-                position: targetPos,
-                name: currentService.name || '',
-                price: currentService.price || 0,
-                duration: currentService.duration || 30,
-                description: currentService.description || null,
-                image_url: currentService.image_url || null,
-                is_active: currentService.is_active !== undefined ? currentService.is_active : true
-            },
-            { 
-                id: targetService.id, 
-                position: currentPos,
-                name: targetService.name || '',
-                price: targetService.price || 0,
-                duration: targetService.duration || 30,
-                description: targetService.description || null,
-                image_url: targetService.image_url || null,
-                is_active: targetService.is_active !== undefined ? targetService.is_active : true
-            }
-        ];
-        
+        // Actualizar SOLO el campo position de ambos servicios
         const { error: updateError } = await db.from('services')
-            .upsert(updates);
+            .update({ position: targetPos })
+            .eq('id', currentService.id);
         
         if (updateError) throw updateError;
+        
+        const { error: updateError2 } = await db.from('services')
+            .update({ position: currentPos })
+            .eq('id', targetService.id);
+        
+        if (updateError2) throw updateError2;
         
         loadServices();
     } catch (error) {
@@ -334,7 +311,7 @@ window.moveService = async function(id, newIndex) {
     }
 };
 
-// Mover servicio al inicio (función global)
+// Mover servicio al inicio (función global) - Optimizado: solo actualiza position
 window.moveServiceToStart = async function(id) {
     try {
         // Obtener todos los servicios activos
@@ -356,29 +333,13 @@ window.moveServiceToStart = async function(id) {
         if (positionsWithValues.length > 0) {
             newPosition = Math.min(...positionsWithValues) - 1;
         } else {
-            // Si ningún servicio tiene position, empezar desde 0
             newPosition = 0;
         }
         
-        // Obtener el servicio completo para mantener todos sus campos
-        const serviceToUpdate = activeServices.find(s => s.id === id);
-        
-        if (!serviceToUpdate) {
-            console.error('Servicio no encontrado:', id);
-            return;
-        }
-        
+        // Actualizar SOLO el campo position
         const { error: updateError } = await db.from('services')
-            .upsert([{
-                id: serviceToUpdate.id,
-                position: newPosition,
-                name: serviceToUpdate.name || '',
-                price: serviceToUpdate.price || 0,
-                duration: serviceToUpdate.duration || 30,
-                description: serviceToUpdate.description || null,
-                image_url: serviceToUpdate.image_url || null,
-                is_active: serviceToUpdate.is_active !== undefined ? serviceToUpdate.is_active : true
-            }]);
+            .update({ position: newPosition })
+            .eq('id', id);
         
         if (updateError) throw updateError;
         
@@ -411,32 +372,16 @@ window.moveServiceToEnd = async function(id) {
         if (positionsWithValues.length > 0) {
             newPosition = Math.max(...positionsWithValues) + 1;
         } else {
-            // Si ningún servicio tiene position, usar el número de servicios
             newPosition = activeServices.length;
         }
-        
-        // Obtener el servicio completo para mantener todos sus campos
-        const serviceToUpdate = activeServices.find(s => s.id === id);
-        
-        if (!serviceToUpdate) {
-            console.error('Servicio no encontrado:', id);
-            return;
-        }
-        
+
+        // Actualizar SOLO el campo position
         const { error: updateError } = await db.from('services')
-            .upsert([{
-                id: serviceToUpdate.id,
-                position: newPosition,
-                name: serviceToUpdate.name || '',
-                price: serviceToUpdate.price || 0,
-                duration: serviceToUpdate.duration || 30,
-                description: serviceToUpdate.description || null,
-                image_url: serviceToUpdate.image_url || null,
-                is_active: serviceToUpdate.is_active !== undefined ? serviceToUpdate.is_active : true
-            }]);
-        
+            .update({ position: newPosition })
+            .eq('id', id);
+
         if (updateError) throw updateError;
-        
+
         loadServices();
     } catch (error) {
         console.error('Error moviendo servicio al final:', error);
