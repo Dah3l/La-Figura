@@ -1,4 +1,191 @@
-// Default Services Data
+// ============================================
+// CONFIGURACIÓN Y ESTADO GLOBAL
+// ============================================
+
+// Admin password (en producción, usar autenticación real de Supabase)
+const ADMIN_PASSWORD = 'admin123';
+
+// Estado de la aplicación
+let services = [];
+let barberInfo = {};
+let isAdminLoggedIn = false;
+let editingServiceId = null;
+
+// ============================================
+// FUNCIONES DE SUPABASE
+// ============================================
+
+// Obtener servicios desde Supabase
+async function fetchServices() {
+    try {
+        if (!window.sbClient) {
+            console.warn('Supabase no está configurado, usando datos locales');
+            return null;
+        }
+        
+        const { data, error } = await window.sbClient
+            .from('services')
+            .select('*')
+            .eq('active', true)
+            .order('name', { ascending: true });
+        
+        if (error) throw error;
+        return data;
+    } catch (error) {
+        console.error('Error al obtener servicios:', error);
+        return null;
+    }
+}
+
+// Guardar/Actualizar servicio en Supabase
+async function saveServiceToSupabase(service) {
+    try {
+        if (!window.sbClient) return false;
+        
+        if (service.id && typeof service.id === 'number' && service.id > 0) {
+            // Actualizar existente
+            const { error } = await window.sbClient
+                .from('services')
+                .update({
+                    name: service.name,
+                    price: service.price,
+                    duration: service.duration,
+                    description: service.description || '',
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', service.id);
+            
+            if (error) throw error;
+        } else {
+            // Crear nuevo
+            const { data, error } = await window.sbClient
+                .from('services')
+                .insert([{
+                    name: service.name,
+                    price: service.price,
+                    duration: service.duration,
+                    description: service.description || '',
+                    active: true,
+                    created_at: new Date().toISOString()
+                }])
+                .select();
+            
+            if (error) throw error;
+            return data[0];
+        }
+        return true;
+    } catch (error) {
+        console.error('Error al guardar servicio:', error);
+        return false;
+    }
+}
+
+// Eliminar servicio en Supabase (desactivar)
+async function deleteServiceFromSupabase(id) {
+    try {
+        if (!window.sbClient) return false;
+        
+        const { error } = await window.sbClient
+            .from('services')
+            .update({ active: false, updated_at: new Date().toISOString() })
+            .eq('id', id);
+        
+        if (error) throw error;
+        return true;
+    } catch (error) {
+        console.error('Error al eliminar servicio:', error);
+        return false;
+    }
+}
+
+// Obtener configuración del negocio
+async function fetchBusinessConfig() {
+    try {
+        if (!window.sbClient) return null;
+        
+        const { data, error } = await window.sbClient
+            .from('business_config')
+            .select('*')
+            .single();
+        
+        if (error && error.code !== 'PGRST116') throw error;
+        return data;
+    } catch (error) {
+        console.error('Error al obtener configuración:', error);
+        return null;
+    }
+}
+
+// Guardar configuración del negocio
+async function saveBusinessConfig(config) {
+    try {
+        if (!window.sbClient) return false;
+        
+        const existing = await fetchBusinessConfig();
+        
+        if (existing && existing.id) {
+            // Actualizar existente
+            const { error } = await window.sbClient
+                .from('business_config')
+                .update({
+                    whatsapp_number: config.whatsappNumber,
+                    barber_name: config.barberName,
+                    address: config.address,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', existing.id);
+            
+            if (error) throw error;
+        } else {
+            // Crear nuevo
+            const { error } = await window.sbClient
+                .from('business_config')
+                .insert([{
+                    whatsapp_number: config.whatsappNumber,
+                    barber_name: config.barberName,
+                    address: config.address
+                }]);
+            
+            if (error) throw error;
+        }
+        return true;
+    } catch (error) {
+        console.error('Error al guardar configuración:', error);
+        return false;
+    }
+}
+
+// Guardar cita en Supabase
+async function saveAppointment(appointment) {
+    try {
+        if (!window.sbClient) return false;
+        
+        const { data, error } = await window.sbClient
+            .from('appointments')
+            .insert([{
+                customer_name: appointment.customerName,
+                customer_phone: appointment.customerPhone,
+                appointment_date: appointment.date,
+                appointment_time: appointment.time,
+                services: JSON.stringify(appointment.services),
+                total_price: appointment.totalPrice,
+                status: 'pending',
+                created_at: new Date().toISOString()
+            }])
+            .select();
+        
+        if (error) throw error;
+        return true;
+    } catch (error) {
+        console.error('Error al guardar cita:', error);
+        return false;
+    }
+}
+
+// ============================================
+// DATOS POR DEFECTO (FALLBACK)
+// ============================================
+
 const defaultServices = [
     { id: 1, name: 'Corte Clásico', price: 150, duration: 30, icon: '✂️' },
     { id: 2, name: 'Corte Moderno', price: 200, duration: 40, icon: '🎨' },
@@ -8,64 +195,81 @@ const defaultServices = [
     { id: 6, name: 'Peinado', price: 80, duration: 15, icon: '💈' }
 ];
 
-// Default Barber Info
 const defaultBarberInfo = {
     whatsappNumber: '+5355555555',
     barberName: 'Barbería Cubana',
     address: 'La Habana, Cuba'
 };
 
-// Admin password (in production, this should be server-side)
-const ADMIN_PASSWORD = 'admin123';
+// ============================================
+// FUNCIONES DE LOCALSTORAGE (FALLBACK)
+// ============================================
 
-// State Management
-let services = [];
-let barberInfo = {};
-let isAdminLoggedIn = false;
-let editingServiceId = null;
+function loadServicesFromLocal() {
+    const saved = localStorage.getItem('barberServices');
+    return saved ? JSON.parse(saved) : [...defaultServices];
+}
 
-// Initialize App
-document.addEventListener('DOMContentLoaded', () => {
-    loadData();
+function saveServicesToLocal() {
+    localStorage.setItem('barberServices', JSON.stringify(services));
+}
+
+function loadBarberInfoFromLocal() {
+    const saved = localStorage.getItem('barberInfo');
+    return saved ? JSON.parse(saved) : { ...defaultBarberInfo };
+}
+
+function saveBarberInfoToLocal() {
+    localStorage.setItem('barberInfo', JSON.stringify(barberInfo));
+}
+
+// ============================================
+// INICIALIZACIÓN Y CARGA DE DATOS
+// ============================================
+
+document.addEventListener('DOMContentLoaded', async () => {
+    await loadData();
     renderServices();
     renderBookingServices();
     setupEventListeners();
     setMinDate();
 });
 
-// Load data from localStorage
-function loadData() {
-    const savedServices = localStorage.getItem('barberServices');
-    const savedBarberInfo = localStorage.getItem('barberInfo');
-
-    if (savedServices) {
-        services = JSON.parse(savedServices);
+// Cargar datos (primero intenta Supabase, luego localStorage)
+async function loadData() {
+    // Intentar cargar servicios desde Supabase
+    const supabaseServices = await fetchServices();
+    if (supabaseServices && supabaseServices.length > 0) {
+        services = supabaseServices.map(s => ({
+            id: s.id,
+            name: s.name,
+            price: s.price,
+            duration: s.duration,
+            icon: s.icon || '✂️'
+        }));
     } else {
-        services = [...defaultServices];
-        saveServices();
+        services = loadServicesFromLocal();
     }
-
-    if (savedBarberInfo) {
-        barberInfo = JSON.parse(savedBarberInfo);
+    
+    // Intentar cargar configuración desde Supabase
+    const supabaseConfig = await fetchBusinessConfig();
+    if (supabaseConfig) {
+        barberInfo = {
+            whatsappNumber: supabaseConfig.whatsapp_number || defaultBarberInfo.whatsappNumber,
+            barberName: supabaseConfig.barber_name || defaultBarberInfo.barberName,
+            address: supabaseConfig.address || defaultBarberInfo.address
+        };
     } else {
-        barberInfo = { ...defaultBarberInfo };
-        saveBarberInfo();
+        barberInfo = loadBarberInfoFromLocal();
     }
-
-    // Populate barber info form
+    
+    // Poblar formulario de información
     document.getElementById('whatsappNumber').value = barberInfo.whatsappNumber;
     document.getElementById('barberName').value = barberInfo.barberName;
     document.getElementById('barberAddress').value = barberInfo.address;
-}
-
-// Save services to localStorage
-function saveServices() {
-    localStorage.setItem('barberServices', JSON.stringify(services));
-}
-
-// Save barber info to localStorage
-function saveBarberInfo() {
-    localStorage.setItem('barberInfo', JSON.stringify(barberInfo));
+    
+    // Actualizar logo con nombre real
+    document.querySelector('.logo h1').textContent = `✂️ ${barberInfo.barberName}`;
 }
 
 // Render services on the main page
@@ -156,7 +360,7 @@ function setupEventListeners() {
 }
 
 // Handle booking form submission
-function handleBooking(e) {
+async function handleBooking(e) {
     e.preventDefault();
 
     const name = document.getElementById('name').value;
@@ -188,6 +392,18 @@ function handleBooking(e) {
         month: 'long', 
         day: 'numeric' 
     });
+
+    // Guardar cita en Supabase (opcional)
+    const appointmentData = {
+        customerName: name,
+        customerPhone: phone,
+        date: date,
+        time: time,
+        services: selectedServices,
+        totalPrice: total
+    };
+    
+    await saveAppointment(appointmentData);
 
     // Create WhatsApp message
     const message = `👋 Hola, quiero reservar una cita:%0A%0A` +
@@ -272,10 +488,20 @@ window.editService = function(id) {
 };
 
 // Delete service
-window.deleteService = function(id) {
+window.deleteService = async function(id) {
     if (confirm('¿Estás seguro de que deseas eliminar este servicio?')) {
-        services = services.filter(s => s.id !== id);
-        saveServices();
+        // Intentar eliminar en Supabase primero
+        const deletedInSupabase = await deleteServiceFromSupabase(id);
+        
+        if (deletedInSupabase) {
+            // Eliminar del array local
+            services = services.filter(s => s.id !== id);
+        } else {
+            // Fallback: solo eliminar localmente
+            services = services.filter(s => s.id !== id);
+        }
+        
+        saveServicesToLocal();
         renderAdminServices();
         renderServices();
         renderBookingServices();
@@ -283,7 +509,7 @@ window.deleteService = function(id) {
 };
 
 // Handle service form submission
-function handleServiceSubmit(e) {
+async function handleServiceSubmit(e) {
     e.preventDefault();
 
     const name = document.getElementById('serviceName').value.trim();
@@ -300,6 +526,9 @@ function handleServiceSubmit(e) {
                 price,
                 duration
             };
+            
+            // Guardar en Supabase si está disponible
+            await saveServiceToSupabase(services[serviceIndex]);
         }
         editingServiceId = null;
         document.getElementById('cancelEdit').style.display = 'none';
@@ -315,9 +544,18 @@ function handleServiceSubmit(e) {
             icon: icons[Math.floor(Math.random() * icons.length)]
         };
         services.push(newService);
+        
+        // Intentar guardar en Supabase y obtener ID real
+        const savedService = await saveServiceToSupabase(newService);
+        if (savedService && savedService.id) {
+            // Actualizar con el ID real de la base de datos
+            newService.id = savedService.id;
+            services[services.length - 1] = newService;
+        }
     }
 
-    saveServices();
+    // Guardar en localStorage como fallback
+    saveServicesToLocal();
     renderAdminServices();
     renderServices();
     renderBookingServices();
@@ -335,14 +573,20 @@ function cancelEdit() {
 }
 
 // Handle barber info submission
-function handleBarberInfoSubmit(e) {
+async function handleBarberInfoSubmit(e) {
     e.preventDefault();
 
     barberInfo.whatsappNumber = document.getElementById('whatsappNumber').value.trim();
     barberInfo.barberName = document.getElementById('barberName').value.trim();
     barberInfo.address = document.getElementById('barberAddress').value.trim();
 
-    saveBarberInfo();
+    // Guardar en Supabase
+    const savedInSupabase = await saveBusinessConfig(barberInfo);
+    
+    if (!savedInSupabase) {
+        // Fallback a localStorage
+        saveBarberInfoToLocal();
+    }
     
     // Update logo if barber name changed
     document.querySelector('.logo h1').textContent = `✂️ ${barberInfo.barberName}`;
