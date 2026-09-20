@@ -8,22 +8,14 @@ async function loadAllServices() {
     const container = document.getElementById('services-list');
     
     try {
-        // Obtener todos los servicios activos ordenados por position o price
         const { data, error } = await db.from('services')
             .select('*')
             .eq('is_active', true)
-            .order('position', { ascending: true, nullsFirst: false });
+            .order('price', { ascending: true });
         
         if (error) throw error;
         
-        // Ordenar en el cliente si es necesario
-        let services = data || [];
-        services = services.sort((a, b) => {
-            if (a.position === null && b.position === null) return a.price - b.price;
-            if (a.position === null) return 1;
-            if (b.position === null) return -1;
-            return a.position - b.position;
-        });
+        const services = data || [];
         
         if (services.length > 0) {
             container.innerHTML = services.map(service => `

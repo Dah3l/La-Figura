@@ -10,23 +10,15 @@ async function loadFeaturedServices() {
     const container = document.getElementById('featured-services');
     
     try {
-        // Obtener servicios activos ordenados por position/price
         const { data, error } = await db.from('services')
             .select('*')
             .eq('is_active', true)
-            .order('position', { ascending: true, nullsFirst: false })
+            .order('price', { ascending: true })
             .limit(3);
         
         if (error) throw error;
         
-        // Ordenar en cliente si es necesario
-        let services = data || [];
-        services = services.sort((a, b) => {
-            if (a.position === null && b.position === null) return a.price - b.price;
-            if (a.position === null) return 1;
-            if (b.position === null) return -1;
-            return a.position - b.position;
-        }).slice(0, 3);
+        const services = data || [];
         
         if (services.length > 0) {
             container.innerHTML = services.map(service => `
