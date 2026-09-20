@@ -108,7 +108,7 @@ async function handleBooking(e) {
         service_name: serviceName,
         service_price: parseInt(price),
         duration: parseInt(duration),
-        date: date,
+        appointment_date: date,
         time: time,
         notes: notes || null,
         status: 'pending'

@@ -287,7 +287,7 @@ async function loadAppointments() {
                         <span class="appointment-status status-${appointment.status}">${appointment.status}</span>
                     </div>
                     <p>${escapeHtml(appointment.service_name)} - ${appointment.service_price} CUP</p>
-                    <p class="text-muted">📅 ${appointment.date} ⏰ ${appointment.time}</p>
+                    <p class="text-muted">📅 ${appointment.appointment_date || appointment.date} ⏰ ${appointment.time}</p>
                 </div>
             `).join('');
         } else {
