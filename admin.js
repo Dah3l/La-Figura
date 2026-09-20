@@ -277,7 +277,6 @@ async function loadAppointments() {
                     </div>
                     <p>${escapeHtml(appointment.service_name)} - ${appointment.service_price} CUP</p>
                     <p class="text-muted">📅 ${appointment.date} ⏰ ${appointment.time}</p>
-                    ${appointment.barber ? `<p class="text-muted">🧔 Barbero: ${escapeHtml(appointment.barber)}</p>` : ''}
                 </div>
             `).join('');
         } else {

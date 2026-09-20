@@ -88,7 +88,6 @@ async function handleBooking(e) {
     
     const name = document.getElementById('name').value.trim();
     const serviceSelect = document.getElementById('service');
-    const barber = document.getElementById('barber').value;
     const date = document.getElementById('date').value;
     const time = document.getElementById('time').value;
     const notes = document.getElementById('notes').value.trim();
@@ -109,7 +108,6 @@ async function handleBooking(e) {
         service_name: serviceName,
         service_price: parseInt(price),
         duration: parseInt(duration),
-        barber: barber || null,
         date: date,
         time: time,
         notes: notes || null,
@@ -135,7 +133,6 @@ async function handleBooking(e) {
 ✂️ *Servicio:* ${serviceName}
 💰 *Precio:* ${price} CUP
 ⏱️ *Duración:* ${duration} min
-${barber ? `🧔 *Barbero:* ${barber}` : ''}
 📆 *Fecha:* ${formatDate(date)}
 ⏰ *Hora:* ${time}
 ${notes ? `📝 *Notas:* ${notes}` : ''}
