@@ -279,9 +279,21 @@ window.moveService = async function(id, newIndex) {
         
         if (!currentService || !targetService) return;
         
-        // Intercambiar posiciones
-        const currentPos = currentService.position || currentService.price;
-        const targetPos = targetService.position || targetService.price;
+        // Si ya está en esa posición, no hacer nada
+        if (currentService.id === targetService.id) return;
+        
+        // Calcular posiciones basadas en position o usar price como fallback
+        const getPosition = (service) => {
+            if (service.position !== null && service.position !== undefined) {
+                return service.position;
+            }
+            // Si no tiene position, usar un valor basado en su índice actual
+            const idx = activeServices.findIndex(s => s.id === service.id);
+            return idx * 1000 + service.price;
+        };
+        
+        const currentPos = getPosition(currentService);
+        const targetPos = getPosition(targetService);
         
         // Actualizar ambos servicios
         const { error: updateError } = await db.from('services')
@@ -309,19 +321,21 @@ window.moveServiceToStart = async function(id) {
         const activeServices = allServices.filter(s => s.is_active !== false);
         if (activeServices.length <= 1) return;
         
-        // Encontrar la posición mínima actual
-        const positions = activeServices.map(s => s.position !== null ? s.position : s.price);
-        const minPosition = Math.min(...positions);
-        
-        // Obtener el servicio a mover
-        const serviceToMove = activeServices.find(s => s.id === id);
-        if (!serviceToMove) return;
-        
         // Si ya está al inicio, no hacer nada
         if (activeServices[0].id === id) return;
         
-        // Asignar una posición menor que la mínima
-        const newPosition = minPosition - 1;
+        // Encontrar la posición mínima actual de los que tienen position
+        const positionsWithValues = activeServices
+            .filter(s => s.position !== null && s.position !== undefined)
+            .map(s => s.position);
+        
+        let newPosition;
+        if (positionsWithValues.length > 0) {
+            newPosition = Math.min(...positionsWithValues) - 1;
+        } else {
+            // Si ningún servicio tiene position, empezar desde 0
+            newPosition = 0;
+        }
         
         const { error: updateError } = await db.from('services')
             .update({ position: newPosition })
@@ -346,19 +360,21 @@ window.moveServiceToEnd = async function(id) {
         const activeServices = allServices.filter(s => s.is_active !== false);
         if (activeServices.length <= 1) return;
         
-        // Encontrar la posición máxima actual
-        const positions = activeServices.map(s => s.position !== null ? s.position : s.price);
-        const maxPosition = Math.max(...positions);
-        
-        // Obtener el servicio a mover
-        const serviceToMove = activeServices.find(s => s.id === id);
-        if (!serviceToMove) return;
-        
         // Si ya está al final, no hacer nada
         if (activeServices[activeServices.length - 1].id === id) return;
         
-        // Asignar una posición mayor que la máxima
-        const newPosition = maxPosition + 1;
+        // Encontrar la posición máxima actual de los que tienen position
+        const positionsWithValues = activeServices
+            .filter(s => s.position !== null && s.position !== undefined)
+            .map(s => s.position);
+        
+        let newPosition;
+        if (positionsWithValues.length > 0) {
+            newPosition = Math.max(...positionsWithValues) + 1;
+        } else {
+            // Si ningún servicio tiene position, usar el número de servicios
+            newPosition = activeServices.length;
+        }
         
         const { error: updateError } = await db.from('services')
             .update({ position: newPosition })
