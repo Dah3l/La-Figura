@@ -3,191 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Barbería Cubana - Estilo & Tradición</title>
-    <!-- Supabase JS -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <title>Barbería Cuba - Estilo & Tradición</title>
     <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-    <script>
-        // ============================================
-        // CONFIGURACIÓN DE SUPABASE
-        // ============================================
-        const SUPABASE_URL = 'https://jasolzvlclhyjacxmhql.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imphc29senZsY2xoeWphY3htaHFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk5MDgyMzIsImV4cCI6MjEwNTQ4NDIzMn0._HeZ0jFOw85rN3Dxcnf_VQ6DY3dwon7kbi-xJMhiBX0';
-        
-        // Inicializar cliente de Supabase
-        if (typeof window.supabase !== 'undefined') {
-            window.sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        } else {
-            console.error('Supabase no se cargó correctamente');
-        }
-    </script>
     <!-- Header -->
     <header class="header">
         <nav class="nav container">
-            <div class="logo">
-                <h1>✂️ Barbería Cubana</h1>
-            </div>
-            <ul class="nav-links">
-                <li><a href="#inicio">Inicio</a></li>
-                <li><a href="#servicios">Servicios</a></li>
-                <li><a href="#reservar">Reservar</a></li>
-                <li><a href="#admin" class="btn-admin">Admin</a></li>
+            <a href="index.html" class="logo">BARBERÍA</a>
+            <ul class="nav-menu">
+                <li><a href="index.html" class="nav-link active">Inicio</a></li>
+                <li><a href="services.html" class="nav-link">Servicios</a></li>
+                <li><a href="booking.html" class="nav-link">Reservar</a></li>
+                <li><a href="admin.html" class="nav-link admin-btn">Admin</a></li>
             </ul>
         </nav>
     </header>
 
     <!-- Hero Section -->
-    <section id="inicio" class="hero">
+    <section class="hero">
         <div class="container hero-content">
-            <h2>Estilo Clásico,<br>Toque Moderno</h2>
-            <p>La mejor experiencia de barbería en Cuba. Reserva tu cita y luce impecable.</p>
-            <a href="#reservar" class="btn-primary">Reservar Cita</a>
+            <h1>Estilo & Tradición</h1>
+            <p class="hero-subtitle">La mejor experiencia de barbería en Cuba</p>
+            <a href="booking.html" class="btn btn-primary">Reservar Cita</a>
         </div>
     </section>
 
-    <!-- Servicios Section -->
-    <section id="servicios" class="services section">
-        <div class="container">
-            <h2 class="section-title">Nuestros Servicios</h2>
-            <div class="services-grid" id="servicesContainer">
-                <!-- Services will be loaded dynamically -->
-            </div>
+    <!-- Featured Services -->
+    <section class="section container">
+        <h2 class="section-title">Nuestros Servicios</h2>
+        <div id="featured-services" class="services-grid">
+            <div class="loading">Cargando servicios...</div>
+        </div>
+        <div class="text-center mt-4">
+            <a href="services.html" class="btn btn-outline">Ver todos los servicios</a>
         </div>
     </section>
 
-    <!-- Booking Section -->
-    <section id="reservar" class="booking section">
+    <!-- Info Section -->
+    <section class="section bg-light">
         <div class="container">
-            <h2 class="section-title">Reserva tu Cita</h2>
-            <div class="booking-container">
-                <form id="bookingForm" class="booking-form">
-                    <div class="form-group">
-                        <label for="name">Nombre Completo</label>
-                        <input type="text" id="name" required placeholder="Tu nombre">
-                    </div>
-                    <div class="form-group">
-                        <label for="phone">Teléfono</label>
-                        <input type="tel" id="phone" required placeholder="+53 XXXXXXXX">
-                    </div>
-                    <div class="form-group">
-                        <label for="date">Fecha</label>
-                        <input type="date" id="date" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="time">Hora</label>
-                        <select id="time" required>
-                            <option value="">Selecciona una hora</option>
-                            <option value="9:00 AM">9:00 AM</option>
-                            <option value="10:00 AM">10:00 AM</option>
-                            <option value="11:00 AM">11:00 AM</option>
-                            <option value="12:00 PM">12:00 PM</option>
-                            <option value="1:00 PM">1:00 PM</option>
-                            <option value="2:00 PM">2:00 PM</option>
-                            <option value="3:00 PM">3:00 PM</option>
-                            <option value="4:00 PM">4:00 PM</option>
-                            <option value="5:00 PM">5:00 PM</option>
-                            <option value="6:00 PM">6:00 PM</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Servicios</label>
-                        <div class="services-checkbox" id="bookingServices">
-                            <!-- Services checkboxes will be loaded dynamically -->
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>Total a Pagar</label>
-                        <div class="total-price" id="totalPrice">$0 CUP</div>
-                    </div>
-                    <button type="submit" class="btn-primary btn-full">Confirmar por WhatsApp</button>
-                </form>
-            </div>
-        </div>
-    </section>
-
-    <!-- Admin Panel -->
-    <section id="admin" class="admin section">
-        <div class="container">
-            <h2 class="section-title">Panel de Administración</h2>
-            
-            <div id="loginPanel" class="admin-login">
-                <h3>Iniciar Sesión</h3>
-                <form id="loginForm">
-                    <div class="form-group">
-                        <label>Contraseña</label>
-                        <input type="password" id="adminPassword" required placeholder="Ingresa la contraseña">
-                    </div>
-                    <button type="submit" class="btn-primary">Acceder</button>
-                </form>
-            </div>
-
-            <div id="adminDashboard" class="admin-dashboard" style="display: none;">
-                <div class="admin-header">
-                    <h3>Gestión de Servicios</h3>
-                    <button id="logoutBtn" class="btn-secondary">Cerrar Sesión</button>
+            <h2 class="section-title">Información</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-icon">📍</div>
+                    <h3>Ubicación</h3>
+                    <p id="info-address">Cargando...</p>
                 </div>
-                
-                <div class="admin-content">
-                    <form id="serviceForm" class="service-form">
-                        <input type="hidden" id="serviceId">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Nombre del Servicio</label>
-                                <input type="text" id="serviceName" required placeholder="Ej: Corte Clásico">
-                            </div>
-                            <div class="form-group">
-                                <label>Precio (CUP)</label>
-                                <input type="number" id="servicePrice" required placeholder="Ej: 150">
-                            </div>
-                            <div class="form-group">
-                                <label>Duración (minutos)</label>
-                                <input type="number" id="serviceDuration" placeholder="Ej: 30">
-                            </div>
-                        </div>
-                        <div class="form-actions">
-                            <button type="submit" class="btn-primary">Guardar Servicio</button>
-                            <button type="button" id="cancelEdit" class="btn-secondary" style="display: none;">Cancelar</button>
-                        </div>
-                    </form>
-
-                    <div class="services-list">
-                        <h4>Servicios Existentes</h4>
-                        <table class="services-table">
-                            <thead>
-                                <tr>
-                                    <th>Servicio</th>
-                                    <th>Precio</th>
-                                    <th>Duración</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="adminServicesList">
-                                <!-- Services will be loaded here -->
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div class="barber-info">
-                        <h4>Información del Negocio</h4>
-                        <form id="barberInfoForm">
-                            <div class="form-group">
-                                <label>Número de WhatsApp</label>
-                                <input type="text" id="whatsappNumber" placeholder="+53XXXXXXXX">
-                            </div>
-                            <div class="form-group">
-                                <label>Nombre de la Barbería</label>
-                                <input type="text" id="barberName" placeholder="Nombre del negocio">
-                            </div>
-                            <div class="form-group">
-                                <label>Dirección</label>
-                                <input type="text" id="barberAddress" placeholder="Dirección en Cuba">
-                            </div>
-                            <button type="submit" class="btn-primary">Actualizar Información</button>
-                        </form>
-                    </div>
+                <div class="info-item">
+                    <div class="info-icon">⏰</div>
+                    <h3>Horario</h3>
+                    <p>Lunes - Sábado: 9:00 AM - 7:00 PM</p>
+                    <p>Domingo: Con cita previa</p>
+                </div>
+                <div class="info-item">
+                    <div class="info-icon">📱</div>
+                    <h3>Contacto</h3>
+                    <p id="info-phone">Cargando...</p>
                 </div>
             </div>
         </div>
@@ -196,11 +69,11 @@
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
-            <p>&copy; 2024 Barbería Cubana. Todos los derechos reservados.</p>
-            <p>📍 La Habana, Cuba</p>
+            <p>&copy; 2025 Barbería Cuba. Todos los derechos reservados.</p>
         </div>
     </footer>
 
-    <script src="app.js"></script>
+    <script src="config.js"></script>
+    <script src="home.js"></script>
 </body>
 </html>

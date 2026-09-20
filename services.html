@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Servicios - Barbería Cuba</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="nav container">
+            <a href="index.html" class="logo">BARBERÍA</a>
+            <ul class="nav-menu">
+                <li><a href="index.html" class="nav-link">Inicio</a></li>
+                <li><a href="services.html" class="nav-link active">Servicios</a></li>
+                <li><a href="booking.html" class="nav-link">Reservar</a></li>
+                <li><a href="admin.html" class="nav-link admin-btn">Admin</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <section class="section container">
+        <h1 class="page-title">Nuestros Servicios</h1>
+        <div id="services-list" class="services-grid">
+            <div class="loading">Cargando servicios...</div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 Barbería Cuba. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <script src="config.js"></script>
+    <script src="services-page.js"></script>
+</body>
+</html>

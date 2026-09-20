@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Barbería Cuba</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="nav container">
+            <a href="index.html" class="logo">BARBERÍA</a>
+            <ul class="nav-menu">
+                <li><a href="index.html" class="nav-link">Inicio</a></li>
+                <li><a href="services.html" class="nav-link">Servicios</a></li>
+                <li><a href="booking.html" class="nav-link">Reservar</a></li>
+                <li><a href="admin.html" class="nav-link active admin-btn">Admin</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Login Section -->
+    <section id="admin-login-section" class="section container">
+        <div class="login-box">
+            <h1 class="page-title">Panel de Administración</h1>
+            <div class="form-group">
+                <label for="admin-password">Contraseña de administrador</label>
+                <input type="password" id="admin-password" placeholder="Ingresa la contraseña">
+            </div>
+            <button id="btn-login" class="btn btn-primary">Acceder</button>
+            <p id="login-error" class="error-msg" style="display: none;">Contraseña incorrecta</p>
+        </div>
+    </section>
+
+    <!-- Admin Panel -->
+    <section id="admin-panel-section" class="section container" style="display: none;">
+        <div class="admin-header">
+            <h1 class="page-title">Gestión del Negocio</h1>
+            <button id="btn-logout" class="btn btn-outline">Cerrar sesión</button>
+        </div>
+
+        <!-- Business Config -->
+        <div class="admin-card">
+            <h2 class="card-title">📋 Información del Negocio</h2>
+            <form id="business-form" class="booking-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="biz-name">Nombre del negocio</label>
+                        <input type="text" id="biz-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="biz-phone">WhatsApp (con código país)</label>
+                        <input type="text" id="biz-phone" placeholder="5351234567" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="biz-address">Dirección</label>
+                    <input type="text" id="biz-address" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Guardar información</button>
+            </form>
+        </div>
+
+        <!-- Services Management -->
+        <div class="admin-card">
+            <h2 class="card-title">✂️ Gestionar Servicios</h2>
+            <form id="service-form" class="booking-form">
+                <input type="hidden" id="service-id">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="service-name">Nombre del servicio</label>
+                        <input type="text" id="service-name" required placeholder="Ej: Corte clásico">
+                    </div>
+                    <div class="form-group">
+                        <label for="service-price">Precio (CUP)</label>
+                        <input type="number" id="service-price" required placeholder="Ej: 500">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="service-duration">Duración (minutos)</label>
+                    <input type="number" id="service-duration" required placeholder="Ej: 30">
+                </div>
+                <div class="form-group">
+                    <label for="service-desc">Descripción (opcional)</label>
+                    <textarea id="service-desc" rows="2" placeholder="Breve descripción del servicio"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Guardar Servicio</button>
+                    <button type="button" id="btn-cancel" class="btn btn-outline" style="display: none;">Cancelar</button>
+                </div>
+            </form>
+
+            <h3 class="subsection-title">Servicios Existentes</h3>
+            <div id="admin-services-list" class="admin-services-list">
+                <div class="loading">Cargando servicios...</div>
+            </div>
+        </div>
+
+        <!-- Appointments -->
+        <div class="admin-card">
+            <h2 class="card-title">📅 Citas Recientes</h2>
+            <div id="appointments-list" class="appointments-list">
+                <p class="text-muted">No hay citas recientes</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 Barbería Cuba. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <script src="config.js"></script>
+    <script src="admin.js"></script>
+</body>
+</html>
