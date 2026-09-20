@@ -474,6 +474,36 @@ body {
 .service-actions {
     display: flex;
     gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.service-actions button {
+    white-space: nowrap;
+    font-size: 0.75rem;
+    padding: 0.4rem 0.6rem;
+}
+
+/* Estilos específicos para desktop - botones más visibles */
+@media (min-width: 769px) {
+    .service-item {
+        flex-direction: row;
+        align-items: center;
+    }
+    
+    .service-info {
+        flex: 1;
+    }
+    
+    .service-actions {
+        flex-shrink: 0;
+        gap: 0.3rem;
+    }
+    
+    .service-actions button {
+        min-width: auto;
+        padding: 0.5rem 0.75rem;
+    }
 }
 
 .appointments-list {
@@ -707,6 +737,14 @@ body {
     .service-actions {
         width: 100%;
         justify-content: center;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+    }
+    
+    .service-actions button {
+        font-size: 0.7rem;
+        padding: 0.35rem 0.5rem;
+        min-width: auto;
     }
     
     .appointment-item {
