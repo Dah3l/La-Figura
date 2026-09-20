@@ -58,7 +58,7 @@ async function loadBusinessInfo() {
         if (data) {
             if (data.business_name) {
                 document.querySelector('.logo').textContent = data.business_name.toUpperCase();
-                document.title = `${data.business_name} - Barbería Cuba`;
+                document.title = `${data.business_name} - La Figura`;
             }
             if (data.address) {
                 document.getElementById('info-address').textContent = data.address;
@@ -68,12 +68,12 @@ async function loadBusinessInfo() {
             }
         } else {
             // Valores por defecto
-            document.getElementById('info-address').textContent = 'La Habana, Cuba';
+            document.getElementById('info-address').textContent = 'La Habana';
             document.getElementById('info-phone').textContent = '+53 5XXX XXXX';
         }
     } catch (error) {
         console.error('Error cargando info del negocio:', error);
-        document.getElementById('info-address').textContent = 'La Habana, Cuba';
+        document.getElementById('info-address').textContent = 'La Habana';
         document.getElementById('info-phone').textContent = '+53 5XXX XXXX';
     }
 }
