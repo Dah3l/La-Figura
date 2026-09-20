@@ -153,8 +153,10 @@ async function loadServices() {
                         ${service.description ? `<small>${escapeHtml(service.description)}</small>` : ''}
                     </div>
                     <div class="service-actions">
-                        <button class="btn btn-sm btn-outline" onclick="moveService(${service.id}, ${index - 1})" ${index === 0 ? 'disabled' : ''}>⬆️</button>
-                        <button class="btn btn-sm btn-outline" onclick="moveService(${service.id}, ${index + 1})" ${index === data.length - 1 ? 'disabled' : ''}>⬇️</button>
+                        <button class="btn btn-sm btn-outline" onclick="moveServiceToStart(${service.id})" title="Mover al inicio">⏮️</button>
+                        <button class="btn btn-sm btn-outline" onclick="moveService(${service.id}, ${index - 1})" ${index === 0 ? 'disabled' : ''} title="Mover arriba">⬆️</button>
+                        <button class="btn btn-sm btn-outline" onclick="moveService(${service.id}, ${index + 1})" ${index === data.length - 1 ? 'disabled' : ''} title="Mover abajo">⬇️</button>
+                        <button class="btn btn-sm btn-outline" onclick="moveServiceToEnd(${service.id})" title="Mover al final">⏭️</button>
                         <button class="btn btn-sm btn-outline" onclick="editService(${service.id})">Editar</button>
                         <button class="btn btn-sm btn-danger" onclick="deleteService(${service.id})">Eliminar</button>
                     </div>
@@ -293,6 +295,80 @@ window.moveService = async function(id, newIndex) {
         loadServices();
     } catch (error) {
         console.error('Error moviendo servicio:', error);
+        alert('⚠️ Error al mover: ' + error.message);
+    }
+};
+
+// Mover servicio al inicio (función global)
+window.moveServiceToStart = async function(id) {
+    try {
+        // Obtener todos los servicios activos
+        const { data: allServices, error: fetchError } = await db.from('services').select('*');
+        if (fetchError) throw fetchError;
+        
+        const activeServices = allServices.filter(s => s.is_active !== false);
+        if (activeServices.length <= 1) return;
+        
+        // Encontrar la posición mínima actual
+        const positions = activeServices.map(s => s.position !== null ? s.position : s.price);
+        const minPosition = Math.min(...positions);
+        
+        // Obtener el servicio a mover
+        const serviceToMove = activeServices.find(s => s.id === id);
+        if (!serviceToMove) return;
+        
+        // Si ya está al inicio, no hacer nada
+        if (activeServices[0].id === id) return;
+        
+        // Asignar una posición menor que la mínima
+        const newPosition = minPosition - 1;
+        
+        const { error: updateError } = await db.from('services')
+            .update({ position: newPosition })
+            .eq('id', id);
+        
+        if (updateError) throw updateError;
+        
+        loadServices();
+    } catch (error) {
+        console.error('Error moviendo servicio al inicio:', error);
+        alert('⚠️ Error al mover: ' + error.message);
+    }
+};
+
+// Mover servicio al final (función global)
+window.moveServiceToEnd = async function(id) {
+    try {
+        // Obtener todos los servicios activos
+        const { data: allServices, error: fetchError } = await db.from('services').select('*');
+        if (fetchError) throw fetchError;
+        
+        const activeServices = allServices.filter(s => s.is_active !== false);
+        if (activeServices.length <= 1) return;
+        
+        // Encontrar la posición máxima actual
+        const positions = activeServices.map(s => s.position !== null ? s.position : s.price);
+        const maxPosition = Math.max(...positions);
+        
+        // Obtener el servicio a mover
+        const serviceToMove = activeServices.find(s => s.id === id);
+        if (!serviceToMove) return;
+        
+        // Si ya está al final, no hacer nada
+        if (activeServices[activeServices.length - 1].id === id) return;
+        
+        // Asignar una posición mayor que la máxima
+        const newPosition = maxPosition + 1;
+        
+        const { error: updateError } = await db.from('services')
+            .update({ position: newPosition })
+            .eq('id', id);
+        
+        if (updateError) throw updateError;
+        
+        loadServices();
+    } catch (error) {
+        console.error('Error moviendo servicio al final:', error);
         alert('⚠️ Error al mover: ' + error.message);
     }
 };
