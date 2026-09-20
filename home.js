@@ -10,12 +10,26 @@ async function loadFeaturedServices() {
     const container = document.getElementById('featured-services');
     
     try {
-        const { data, error } = await db.from('services').select('*').order('price', { ascending: true }).limit(3);
+        // Obtener servicios activos ordenados por position/price
+        const { data, error } = await db.from('services')
+            .select('*')
+            .eq('is_active', true)
+            .order('position', { ascending: true, nullsFirst: false })
+            .limit(3);
         
         if (error) throw error;
         
-        if (data && data.length > 0) {
-            container.innerHTML = data.map(service => `
+        // Ordenar en cliente si es necesario
+        let services = data || [];
+        services = services.sort((a, b) => {
+            if (a.position === null && b.position === null) return a.price - b.price;
+            if (a.position === null) return 1;
+            if (b.position === null) return -1;
+            return a.position - b.position;
+        }).slice(0, 3);
+        
+        if (services.length > 0) {
+            container.innerHTML = services.map(service => `
                 <div class="service-card">
                     ${service.image_url ? `<img src="${escapeHtml(service.image_url)}" alt="${escapeHtml(service.name)}" class="service-image" loading="lazy" onerror="this.style.display='none'">` : ''}
                     <h3>${escapeHtml(service.name)}</h3>
