@@ -295,12 +295,32 @@ window.moveService = async function(id, newIndex) {
         const currentPos = getPosition(currentService);
         const targetPos = getPosition(targetService);
         
-        // Actualizar ambos servicios
+        // Actualizar ambos servicios manteniendo todos sus campos
+        const updates = [
+            { 
+                id: currentService.id, 
+                position: targetPos,
+                name: currentService.name,
+                price: currentService.price,
+                duration: currentService.duration,
+                description: currentService.description,
+                image_url: currentService.image_url,
+                is_active: currentService.is_active
+            },
+            { 
+                id: targetService.id, 
+                position: currentPos,
+                name: targetService.name,
+                price: targetService.price,
+                duration: targetService.duration,
+                description: targetService.description,
+                image_url: targetService.image_url,
+                is_active: targetService.is_active
+            }
+        ];
+        
         const { error: updateError } = await db.from('services')
-            .upsert([
-                { id: currentService.id, position: targetPos },
-                { id: targetService.id, position: currentPos }
-            ]);
+            .upsert(updates);
         
         if (updateError) throw updateError;
         
@@ -337,9 +357,20 @@ window.moveServiceToStart = async function(id) {
             newPosition = 0;
         }
         
+        // Obtener el servicio completo para mantener todos sus campos
+        const serviceToUpdate = activeServices.find(s => s.id === id);
+        
         const { error: updateError } = await db.from('services')
-            .update({ position: newPosition })
-            .eq('id', id);
+            .upsert([{
+                id: serviceToUpdate.id,
+                position: newPosition,
+                name: serviceToUpdate.name,
+                price: serviceToUpdate.price,
+                duration: serviceToUpdate.duration,
+                description: serviceToUpdate.description,
+                image_url: serviceToUpdate.image_url,
+                is_active: serviceToUpdate.is_active
+            }]);
         
         if (updateError) throw updateError;
         
@@ -376,9 +407,20 @@ window.moveServiceToEnd = async function(id) {
             newPosition = activeServices.length;
         }
         
+        // Obtener el servicio completo para mantener todos sus campos
+        const serviceToUpdate = activeServices.find(s => s.id === id);
+        
         const { error: updateError } = await db.from('services')
-            .update({ position: newPosition })
-            .eq('id', id);
+            .upsert([{
+                id: serviceToUpdate.id,
+                position: newPosition,
+                name: serviceToUpdate.name,
+                price: serviceToUpdate.price,
+                duration: serviceToUpdate.duration,
+                description: serviceToUpdate.description,
+                image_url: serviceToUpdate.image_url,
+                is_active: serviceToUpdate.is_active
+            }]);
         
         if (updateError) throw updateError;
         
