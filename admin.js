@@ -166,12 +166,13 @@ function setupServiceForm() {
         e.preventDefault();
         
         const serviceId = document.getElementById('service-id').value;
+        // Eliminamos updated_at manual para evitar conflicto con triggers de Supabase
         const serviceData = {
             name: document.getElementById('service-name').value.trim(),
             price: parseInt(document.getElementById('service-price').value),
             duration: parseInt(document.getElementById('service-duration').value),
             description: document.getElementById('service-desc').value.trim() || null,
-            updated_at: new Date().toISOString()
+            image_url: document.getElementById('service-image').value.trim() || null
         };
         
         try {
@@ -213,7 +214,8 @@ window.editService = async function(id) {
         document.getElementById('service-id').value = data.id;
         document.getElementById('service-name').value = data.name;
         document.getElementById('service-price').value = data.price;
-        document.getElementById('service-duration').value = data.duration;
+        document.getElementById('service-duration').value = data.duration || 30;
+        document.getElementById('service-image').value = data.image_url || '';
         document.getElementById('service-desc').value = data.description || '';
         
         document.getElementById('btn-cancel').style.display = 'inline-block';
@@ -250,6 +252,7 @@ function clearServiceForm() {
     document.getElementById('service-name').value = '';
     document.getElementById('service-price').value = '';
     document.getElementById('service-duration').value = '';
+    document.getElementById('service-image').value = '';
     document.getElementById('service-desc').value = '';
     
     document.getElementById('btn-cancel').style.display = 'none';
