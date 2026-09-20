@@ -130,19 +130,34 @@ async function loadServices() {
     const container = document.getElementById('admin-services-list');
     
     try {
-        const { data, error } = await db.from('services').select('*').order('price', { ascending: true });
+        // Ordenar por position si existe, sino por price
+        const { data, error } = await db.from('services')
+            .select('*')
+            .order('position', { ascending: true, nullsFirst: false })
+            .then(result => {
+                if (result.error) throw result.error;
+                // Si no hay posición, ordenar por precio
+                return result.data.sort((a, b) => {
+                    if (a.position === null && b.position === null) return a.price - b.price;
+                    if (a.position === null) return 1;
+                    if (b.position === null) return -1;
+                    return a.position - b.position;
+                });
+            });
         
         if (error) throw error;
         
         if (data && data.length > 0) {
-            container.innerHTML = data.map(service => `
-                <div class="service-item">
+            container.innerHTML = data.map((service, index) => `
+                <div class="service-item" data-id="${service.id}">
                     <div class="service-info">
                         <strong>${escapeHtml(service.name)}</strong>
                         <span>${service.price} CUP | ${service.duration} min</span>
                         ${service.description ? `<small>${escapeHtml(service.description)}</small>` : ''}
                     </div>
                     <div class="service-actions">
+                        <button class="btn btn-sm btn-outline" onclick="moveService(${service.id}, ${index - 1})" ${index === 0 ? 'disabled' : ''}>⬆️</button>
+                        <button class="btn btn-sm btn-outline" onclick="moveService(${service.id}, ${index + 1})" ${index === data.length - 1 ? 'disabled' : ''}>⬇️</button>
                         <button class="btn btn-sm btn-outline" onclick="editService(${service.id})">Editar</button>
                         <button class="btn btn-sm btn-danger" onclick="deleteService(${service.id})">Eliminar</button>
                     </div>
@@ -243,6 +258,45 @@ window.deleteService = async function(id) {
     } catch (error) {
         console.error('Error eliminando servicio:', error);
         alert('❌ Error al eliminar: ' + error.message);
+    }
+};
+
+// Mover servicio arriba/abajo (función global)
+window.moveService = async function(id, newIndex) {
+    try {
+        // Obtener todos los servicios
+        const { data: allServices, error: fetchError } = await db.from('services').select('*');
+        if (fetchError) throw fetchError;
+        
+        // Filtrar solo los activos para el ordenamiento visual
+        const activeServices = allServices.filter(s => s.is_active !== false);
+        
+        // Verificar límites
+        if (newIndex < 0 || newIndex >= activeServices.length) return;
+        
+        // Obtener servicio actual y el de destino
+        const currentService = activeServices.find(s => s.id === id);
+        const targetService = activeServices[newIndex];
+        
+        if (!currentService || !targetService) return;
+        
+        // Intercambiar posiciones
+        const currentPos = currentService.position || currentService.price;
+        const targetPos = targetService.position || targetService.price;
+        
+        // Actualizar ambos servicios
+        const { error: updateError } = await db.from('services')
+            .upsert([
+                { id: currentService.id, position: targetPos },
+                { id: targetService.id, position: currentPos }
+            ]);
+        
+        if (updateError) throw updateError;
+        
+        loadServices();
+    } catch (error) {
+        console.error('Error moviendo servicio:', error);
+        alert('⚠️ Error al mover: ' + error.message);
     }
 };
 
