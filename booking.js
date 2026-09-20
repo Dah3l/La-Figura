@@ -125,7 +125,7 @@ async function handleBooking(e) {
     
     // Construir mensaje para WhatsApp
     const phone = businessConfig?.phone || '5351234567';
-    const businessName = businessConfig?.business_name || 'Barbería Cuba';
+    const businessName = businessConfig?.business_name || 'La Figura';
     
     const message = `📅 *Nueva Reserva - ${businessName}*
     

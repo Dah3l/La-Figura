@@ -125,34 +125,31 @@ function setupBusinessForm() {
     });
 }
 
-// Cargar servicios en el panel
+// Cargar servicios en el panel (solo activos)
 async function loadServices() {
     const container = document.getElementById('admin-services-list');
     
     try {
-        // Ordenar por position si existe, sino por price
-        const { data, error } = await db.from('services')
-            .select('*')
-            .order('position', { ascending: true, nullsFirst: false })
-            .then(result => {
-                if (result.error) throw result.error;
-                // Si no hay posición, ordenar por precio
-                return result.data.sort((a, b) => {
-                    if (a.position === null && b.position === null) return a.price - b.price;
-                    if (a.position === null) return 1;
-                    if (b.position === null) return -1;
-                    return a.position - b.position;
-                });
-            });
+        // Obtener todos los servicios y filtrar solo activos en JS para evitar errores de columna
+        const { data: allData, error } = await db.from('services').select('*');
         
         if (error) throw error;
+        
+        // Filtrar solo activos y ordenar por position
+        const data = (allData || [])
+            .filter(s => s.is_active !== false)
+            .sort((a, b) => {
+                const posA = a.position !== null ? a.position : 999999;
+                const posB = b.position !== null ? b.position : 999999;
+                return posA - posB;
+            });
         
         if (data && data.length > 0) {
             container.innerHTML = data.map((service, index) => `
                 <div class="service-item" data-id="${service.id}">
                     <div class="service-info">
                         <strong>${escapeHtml(service.name)}</strong>
-                        <span>${service.price} CUP | ${service.duration} min</span>
+                        <span>${service.price} CUP | ${service.duration || 30} min</span>
                         ${service.description ? `<small>${escapeHtml(service.description)}</small>` : ''}
                     </div>
                     <div class="service-actions">
@@ -168,7 +165,7 @@ async function loadServices() {
         }
     } catch (error) {
         console.error('Error cargando servicios:', error);
-        container.innerHTML = '<p class="error-msg">Error al cargar servicios</p>';
+        container.innerHTML = '<p class="error-msg">Error al cargar servicios: ' + error.message + '</p>';
     }
 }
 

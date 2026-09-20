@@ -107,8 +107,8 @@ body {
    ============================================ */
 
 .hero {
-    background: linear-gradient(rgba(26, 26, 46, 0.85), rgba(22, 33, 62, 0.9)), 
-                url('https://images.unsplash.com/photo-1503951914875-452162b7f30a?auto=format&fit=crop&w=1920&q=80');
+    background: linear-gradient(rgba(26, 26, 46, 0.75), rgba(22, 33, 62, 0.85)), 
+                url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSrnpxZfXxv-Sjlo5plsV76VzPeE_fs94aI1Q1DrXGyDg&s');
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
@@ -559,18 +559,27 @@ body {
    ============================================ */
 
 @media (max-width: 768px) {
-    /* Navegación móvil */
+    /* Navegación móvil optimizada */
     .nav-menu {
-        gap: 0.5rem;
+        gap: 0.3rem;
+        flex-wrap: wrap;
+        justify-content: center;
     }
     
     .nav-link {
-        font-size: 0.85rem;
-        padding: 0.3rem 0.5rem;
+        font-size: 0.8rem;
+        padding: 0.4rem 0.6rem;
+        white-space: nowrap;
     }
     
     .logo {
-        font-size: 1.2rem;
+        font-size: 1.1rem;
+    }
+    
+    /* Botones de navegación más compactos */
+    .admin-btn {
+        padding: 0.3rem 0.5rem !important;
+        font-size: 0.75rem !important;
     }
     
     /* Hero más compacto en móvil */
